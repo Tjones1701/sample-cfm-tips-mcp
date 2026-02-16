@@ -1,0 +1,27 @@
+# Exclude files not needed in the Lambda deployment package
+.venv/
+.git/
+__pycache__/
+.pytest_cache/
+tests/
+sample-cfm-tips-mcp/
+infra/
+cdk.out/
+logs/
+.DS_Store
+*.pyc
+*.pyo
+.gitignore
+.dockerignore
+.cdkbundleignore
+.amazonq/
+sessions/
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+LICENSE
+README.md
+setup.py
+diagnose_cost_optimization_hub_v2.py
+mcp_runbooks.json
+deploy.sh
+cdk-outputs.json

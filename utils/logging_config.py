@@ -54,50 +54,60 @@ class StandardFormatter(logging.Formatter):
         )
 
 
+
 def setup_logging(structured: bool = False, log_level: str = "INFO"):
     """
     Configure comprehensive logging for the application.
-    
+
     Args:
         structured: Whether to use structured JSON logging
         log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
     """
-    
+
     # Create appropriate formatter
     if structured:
         formatter = StructuredFormatter()
     else:
         formatter = StandardFormatter()
-    
+
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, log_level.upper(), logging.INFO))
-    
+
     # Remove existing handlers
     for handler in root_logger.handlers[:]:
         root_logger.removeHandler(handler)
-    
-    # Add file handlers
+
+    # Lambda environment: log to stdout only (CloudWatch captures stdout/stderr)
+    is_lambda = os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
+    if is_lambda:
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setLevel(getattr(logging, log_level.upper(), logging.INFO))
+        stream_handler.setFormatter(formatter)
+        root_logger.addHandler(stream_handler)
+        return logging.getLogger(__name__)
+
+    # Non-Lambda: file-based logging with fallback chain
     try:
         # Try to create logs directory if it doesn't exist
         log_dir = 'logs'
         if not os.path.exists(log_dir):
             os.makedirs(log_dir, exist_ok=True)
-        
+
         # Try main log file in logs directory first
         log_file = os.path.join(log_dir, 'cfm_tips_mcp.log')
         file_handler = logging.FileHandler(log_file)
         file_handler.setLevel(logging.INFO)
         file_handler.setFormatter(formatter)
         root_logger.addHandler(file_handler)
-        
+
         # Try error log file
         error_file = os.path.join(log_dir, 'cfm_tips_mcp_errors.log')
         error_handler = logging.FileHandler(error_file)
         error_handler.setLevel(logging.ERROR)
         error_handler.setFormatter(formatter)
         root_logger.addHandler(error_handler)
-        
+
     except (OSError, PermissionError) as e:
         # If we can't write to logs directory, try current directory
         try:
@@ -105,12 +115,12 @@ def setup_logging(structured: bool = False, log_level: str = "INFO"):
             file_handler.setLevel(logging.INFO)
             file_handler.setFormatter(formatter)
             root_logger.addHandler(file_handler)
-            
+
             error_handler = logging.FileHandler('cfm_tips_mcp_errors.log')
             error_handler.setLevel(logging.ERROR)
             error_handler.setFormatter(formatter)
             root_logger.addHandler(error_handler)
-            
+
         except (OSError, PermissionError):
             # If we can't write anywhere, try temp directory
             try:
@@ -120,21 +130,22 @@ def setup_logging(structured: bool = False, log_level: str = "INFO"):
                 file_handler.setLevel(logging.INFO)
                 file_handler.setFormatter(formatter)
                 root_logger.addHandler(file_handler)
-                
+
                 temp_error = os.path.join(temp_dir, 'cfm_tips_mcp_errors.log')
                 error_handler = logging.FileHandler(temp_error)
                 error_handler.setLevel(logging.ERROR)
                 error_handler.setFormatter(formatter)
                 root_logger.addHandler(error_handler)
-                
+
                 # Log where we're writing files
                 print(f"Warning: Using temp directory for logs: {temp_dir}")
-                
+
             except (OSError, PermissionError):
                 # If all else fails, raise error since we need file logging
                 raise RuntimeError("Could not create log files in any location")
-    
+
     return logging.getLogger(__name__)
+
 
 def log_function_entry(logger, func_name, **kwargs):
     """Log function entry with parameters."""

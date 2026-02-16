@@ -1,0 +1,7 @@
+{
+  "app": "python3 app.py",
+  "context": {
+    "lambda_memory_size": 512,
+    "lambda_timeout": 60
+  }
+}

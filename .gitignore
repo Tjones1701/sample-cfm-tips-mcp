@@ -37,3 +37,9 @@ Thumbs.db
 
 #Template files
 mcp_runbooks.json
+
+# CDK
+cdk.out/
+infra/cdk.out/
+infra/.venv/
+cdk-outputs.json

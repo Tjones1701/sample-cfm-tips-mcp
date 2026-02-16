@@ -120,13 +120,15 @@ class AWSClientFactory:
             raise
     
     @classmethod
-    def get_session(cls, region: Optional[str] = None) -> boto3.Session:
+    def get_session(cls, region: Optional[str] = None, validate_credentials: bool = False) -> boto3.Session:
         """
         Get AWS session with proper configuration.
-        
+
         Args:
             region: AWS region (optional)
-            
+            validate_credentials: If True, verify credentials via sts:GetCallerIdentity.
+                Defaults to False to avoid unnecessary overhead in Lambda.
+
         Returns:
             Configured boto3 session
         """
@@ -134,16 +136,17 @@ class AWSClientFactory:
             session_args = {}
             if region:
                 session_args['region_name'] = region
-            
+
             session = boto3.Session(**session_args)
-            
-            # Verify credentials by making a simple call
-            sts_client = session.client('sts')
-            sts_client.get_caller_identity()
-            
+
+            if validate_credentials:
+                # Verify credentials by making a simple call
+                sts_client = session.client('sts')
+                sts_client.get_caller_identity()
+
             logger.debug(f"Created AWS session for region {region or 'default'}")
             return session
-            
+
         except NoCredentialsError:
             logger.error("AWS credentials not configured")
             raise
