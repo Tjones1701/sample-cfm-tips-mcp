@@ -1,5 +1,5 @@
 #UNCOMMENT THE BELOW LINE IN PUBLIC GITLAB VERSION TO AVOID SHARING THE KIRO SETTINGS
-#.kiro/
+.kiro/
 
 # Virtual environments
 venv/
